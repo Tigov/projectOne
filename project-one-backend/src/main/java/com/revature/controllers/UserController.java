@@ -5,8 +5,9 @@ import com.revature.daos.UserDAO;
 import com.revature.models.Reimbursement;
 import com.revature.models.User;
 import com.revature.models.dtos.IncomingUserDTO;
+import com.revature.models.dtos.OutgoingUserDTO;
 import com.revature.services.UserService;
-import org.postgresql.util.PSQLException;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/users")
+@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
 public class UserController {
 
     private UserService userService;
@@ -61,6 +63,18 @@ public class UserController {
         }
         catch(Exception e){
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody IncomingUserDTO userDTO, HttpSession session){
+        try {
+            User user = userService.loginUser(userDTO);
+            session.setAttribute("userId", user.getUserId());
+            session.setAttribute("username", user.getUsername());
+            return ResponseEntity.ok(new OutgoingUserDTO(user.getUserId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getRole()));
+        }
+        catch(Exception e){
+            return ResponseEntity.status(401).body(e.getMessage());
         }
     }
 
