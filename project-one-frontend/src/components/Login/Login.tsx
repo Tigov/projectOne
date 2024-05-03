@@ -30,7 +30,11 @@ export const Login: React.FC = () => {
     const loginSubmit = async() => {
        
         const response = await axios.post("http://localhost:8080/users/login", user, {withCredentials:true})
-        .then(response => {navigate("/reimb")})
+        .then(response => {
+            navigate("/dashboard")
+            console.log(response.data.role);
+            sessionStorage.setItem("userRole", response.data.role);
+        })
         .catch((error) =>{
             console.log(error)
             setErrorMessage(error.response.data);

@@ -5,8 +5,14 @@ import com.revature.daos.UserDAO;
 import com.revature.models.dtos.IncomingReimbDTO;
 import com.revature.models.Reimbursement;
 import com.revature.models.User;
+import com.revature.models.dtos.OutgoingReimbDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ReimbService {
@@ -36,5 +42,49 @@ public class ReimbService {
         User u = userDAO.findById(reimbDTO.getUserId()).get();
         r.setUser(u);
         return reimbDAO.save(r);
+    }
+
+    public List<OutgoingReimbDTO> getAll(){
+        List<Reimbursement> allReimb = reimbDAO.findAll();
+        List<OutgoingReimbDTO> allReturned = new ArrayList<>();
+
+        for (Reimbursement r : allReimb) {
+            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus());
+            allReturned.add(outgoing);
+        }
+        return allReturned;
+    }
+
+    public List<OutgoingReimbDTO> getAllPending(){
+        List<Reimbursement> allReimb = reimbDAO.findByStatus("pending");
+        List<OutgoingReimbDTO> allReturned = new ArrayList<>();
+
+        for (Reimbursement r : allReimb) {
+            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus());
+            allReturned.add(outgoing);
+        }
+        return allReturned;
+    }
+
+    public OutgoingReimbDTO updateStatus(int reimbId, String newStatus){
+        Optional<Reimbursement> r = reimbDAO.findById(reimbId);
+        if (r.isEmpty()) {
+            throw new IllegalArgumentException("That reimbursement doesn't exist.");
+        }
+
+        Reimbursement found = r.get();
+        found.setStatus(newStatus);
+        Reimbursement savedR = reimbDAO.save(found);
+        return new OutgoingReimbDTO(savedR.getReimbId(), savedR.getUserId(), savedR.getAmount(), savedR.getDescription(), savedR.getStatus());
+    }
+
+    public String deleteReimb(int reimbId){
+        Optional<Reimbursement> r = reimbDAO.findById(reimbId);
+        if (r.isEmpty()){
+            throw new IllegalArgumentException("That reimbursement doesn't exist.");
+        }
+        r.get().getUser().getAllReimbursements().remove(r.get());
+        reimbDAO.deleteById(r.get().getReimbId()); //delete it
+        return "Reimbursement with amount " + r.get().getAmount() + " from user " + r.get().getUser().getUsername() + " has been deleted.";
     }
 }

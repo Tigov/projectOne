@@ -1,20 +1,29 @@
 package com.revature.services;
 
+import com.revature.daos.ReimbDAO;
 import com.revature.daos.UserDAO;
+import com.revature.models.Reimbursement;
 import com.revature.models.User;
 import com.revature.models.dtos.IncomingUserDTO;
+import com.revature.models.dtos.OutgoingReimbDTO;
+import com.revature.models.dtos.OutgoingUserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import java.util.Optional;
 
 @Service
 public class UserService {
     private UserDAO userDAO;
+    private ReimbDAO reimbDAO;
 
     @Autowired
-    public UserService(UserDAO userDAO) {
+    public UserService(UserDAO userDAO, ReimbDAO reimbDAO) {
         this.userDAO = userDAO;
+        this.reimbDAO = reimbDAO;
     }
 
 
@@ -54,5 +63,52 @@ public class UserService {
     }
 
 
+    public List<OutgoingReimbDTO> getUsersReimb(int userId) {
+        Optional<User> optUser = userDAO.findById(userId);
+        if (optUser.isEmpty()){
+            throw new IllegalArgumentException("That user does not exist.");
+        }
+        List<Reimbursement> allReimb =  optUser.get().getAllReimbursements();
+        List<OutgoingReimbDTO> allReturned = new ArrayList<>();
+
+        for (Reimbursement r : allReimb) {
+            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus());
+            allReturned.add(outgoing);
+        }
+        return allReturned;
+    }
+
+
+    public List<OutgoingReimbDTO> getUsersPendingReimb(int userId){
+        List<Reimbursement> allPending = reimbDAO.findByUserUserIdAndStatus(userId, "pending");
+        List<OutgoingReimbDTO> allReturned = new ArrayList<>();
+
+        for (Reimbursement r : allPending) {
+            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus());
+            allReturned.add(outgoing);
+        }
+        return allReturned;
+    }
+
+    public List<OutgoingUserDTO> getAll(){
+        List<User> allUsers = userDAO.findAll();
+        List<OutgoingUserDTO> allReturned = new ArrayList<>();
+
+        for (User u : allUsers) {
+            OutgoingUserDTO outgoing = new OutgoingUserDTO(u.getUserId(),u.getFirstName(),u.getLastName(),u.getUsername(),u.getRole());
+            allReturned.add(outgoing);
+        }
+        return allReturned;
+    }
+
+
+    public String deleteUser(int userId){
+        Optional<User> u = userDAO.findById(userId);
+        if (u.isEmpty()){
+            throw new IllegalArgumentException("That user does not exist.");
+        }
+        userDAO.deleteById(userId);
+        return u.get().getUsername(); //return the username of the deleted user for response messaging
+    }
 
 }

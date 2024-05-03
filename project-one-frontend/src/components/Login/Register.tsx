@@ -35,6 +35,9 @@ export const Register: React.FC = () => {
         else if(input.target.name === "lastName"){
             setUser((user) => ({...user, lastName:input.target.value}))
         }
+        else if (input.target.name === "confirmPassword") {
+            confirmPassword = input.target.value;
+        }
     }
 
     const registerSubmit = async() => {
@@ -67,7 +70,7 @@ export const Register: React.FC = () => {
                     <input type="text" placeholder="Last Name" name="lastName" className="form-control  mb-3" onChange={storeValues}/>
                     <input type="text" placeholder="Username" name="username" className="form-control mb-3" required onChange={storeValues}/>
                     <input type="password" placeholder="Password" name="password" className="form-control mb-3"  required onChange={storeValues}/>
-                    <input type="password" placeholder="Confirm Password" name="confirmPassword" className="form-control"  required/>
+                    <input type="password" placeholder="Confirm Password" name="confirmPassword" className="form-control " onChange={storeValues} required/>
                 </div>
                 <div className="button-container">
                     <button className="btn btn-primary w-100" onClick={registerSubmit}>Submit</button>

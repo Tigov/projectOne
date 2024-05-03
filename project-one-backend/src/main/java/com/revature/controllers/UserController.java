@@ -31,27 +31,54 @@ public class UserController {
         this.userDAO = userDAO;
     }
 
+    //method to get all users, only managers can do this
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers(){
-        return ResponseEntity.ok(userDAO.findAll());
+    public ResponseEntity<?> getAllUsers(HttpSession session){
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).body("You must login.");
+        }
+        int userId = (int)session.getAttribute("userId");
+        User current = userDAO.findById(userId).get();
+
+        if(!current.getRole().equals( "manager")){
+            return ResponseEntity.status(401).body("You are not authorized to view this data.");
+        }
+        return ResponseEntity.ok(userService.getAll());
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<User> getUser(@PathVariable int userId){
-        Optional<User> u = userDAO.findById(userId);
-        if (u.isEmpty()) return ResponseEntity.notFound().build();
+    //method to get all of the current logged in users reimbs
+    @GetMapping("/reimb")
+    public ResponseEntity<?> getAllUserReimb(HttpSession session) {
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).body("You must login.");
+        }
+        int userId = (int)session.getAttribute("userId");
 
-        return ResponseEntity.ok(u.get());
+        try{
+            return ResponseEntity.ok(userService.getUsersReimb(userId));
+        }
+        catch(Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
-    @GetMapping("/{userId}/reimb")
-    public ResponseEntity<List<Reimbursement>> getAllUserReimb(@PathVariable int userId) {
-        Optional<User> u = userDAO.findById(userId);
-        if(u.isEmpty()) return ResponseEntity.notFound().build();
+    //method to get all of the current logged in user's pending reimbs, user must be logged in
+    @GetMapping("/reimb/pending")
+    public ResponseEntity<?> getAllUserPending(HttpSession session) {
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).body("You must login.");
+        }
+        int userId = (int)session.getAttribute("userId");
 
-        return ResponseEntity.ok(u.get().getAllReimbursements());
+        try{
+            return ResponseEntity.ok(userService.getUsersPendingReimb(userId));
+        }
+        catch(Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
+    //method to create a user, they do not need to login for this
     @PostMapping
     public ResponseEntity<String> createUser(@RequestBody IncomingUserDTO userDTO){
         try{
@@ -65,6 +92,8 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    //method to login the user and set the session information.
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@RequestBody IncomingUserDTO userDTO, HttpSession session){
         try {
@@ -78,6 +107,8 @@ public class UserController {
         }
     }
 
+
+
     @PatchMapping("/{userId}")
     public ResponseEntity<User> updateUserRole(@RequestBody String newRole, @PathVariable int userId){
         Optional<User> u = userDAO.findById(userId);
@@ -90,12 +121,19 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    public ResponseEntity<User> deleteUser(@PathVariable int userId){
-        Optional<User> u = userDAO.findById(userId);
-        if (u.isEmpty()) return ResponseEntity.notFound().build();
-
-        userDAO.deleteById(userId);
-        return ResponseEntity.ok(u.get());
+    public ResponseEntity<String> deleteUser(@PathVariable int userId, HttpSession session){
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).body("You must login.");
+        }
+        int loggedInUserId = (int)session.getAttribute("userId");
+        if (loggedInUserId == userId){
+            return ResponseEntity.badRequest().body("You cannot delete your own account.");
+        }
+        try {
+            return ResponseEntity.ok(userService.deleteUser(userId) + " was deleted.");
+        }
+        catch(Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
-
 }
