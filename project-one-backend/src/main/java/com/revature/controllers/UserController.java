@@ -61,6 +61,31 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    @GetMapping("/reimb/{userId}") //get another persons reimbs
+    public ResponseEntity<?> getAUsersReimb(@PathVariable int userId, HttpSession session) {
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).body("You must login.");
+        }
+        try{
+            return ResponseEntity.ok(userService.getUsersReimb(userId));
+        }
+        catch(Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{userId}") //get a users information
+    public ResponseEntity<?> getUser(@PathVariable int userId, HttpSession session) {
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).body("You must login.");
+        }
+        try{
+            return ResponseEntity.ok(userService.getUser(userId));
+        }
+        catch(Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     //method to get all of the current logged in user's pending reimbs, user must be logged in
     @GetMapping("/reimb/pending")
@@ -85,9 +110,6 @@ public class UserController {
             userService.createUser(userDTO);
             return ResponseEntity.status(201).body(userDTO.getUsername() + " was created.");
         }
-        catch(IllegalArgumentException e){
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
         catch(Exception e){
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -100,6 +122,7 @@ public class UserController {
             User user = userService.loginUser(userDTO);
             session.setAttribute("userId", user.getUserId());
             session.setAttribute("username", user.getUsername());
+            session.setAttribute("role", user.getRole());
             return ResponseEntity.ok(new OutgoingUserDTO(user.getUserId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getRole()));
         }
         catch(Exception e){
@@ -107,10 +130,18 @@ public class UserController {
         }
     }
 
-
-
     @PatchMapping("/{userId}")
-    public ResponseEntity<User> updateUserRole(@RequestBody String newRole, @PathVariable int userId){
+    public ResponseEntity<?> updateUserRole(@RequestBody String newRole, @PathVariable int userId, HttpSession session){
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).body("You must login.");
+        }
+        User curUser = userDAO.findById((int)session.getAttribute("userId")).get();
+        if (!curUser.getRole().equals("manager")){
+            return ResponseEntity.status(401).body("You must be a manager to update roles.");
+        }
+        if (userId == curUser.getUserId()){
+            return ResponseEntity.badRequest().body("You cannot update your own role.");
+        }
         Optional<User> u = userDAO.findById(userId);
         if (u.isEmpty()) return ResponseEntity.notFound().build();
 

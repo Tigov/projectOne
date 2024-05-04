@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import "./Login.css"
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UserInterface } from "../../interfaces/UserInterface";
 import axios from "axios";
 
@@ -27,12 +27,19 @@ export const Login: React.FC = () => {
         }
     }
     
+
+    // const clearSession = () => {
+    //     sessionStorage.clear();
+    //     localStorage.clear();
+    // }
+    // useEffect(() => { //whenever we go to login page, clear the session
+    //     clearSession();
+    // },[])
     const loginSubmit = async() => {
        
         const response = await axios.post("http://localhost:8080/users/login", user, {withCredentials:true})
         .then(response => {
             navigate("/dashboard")
-            console.log(response.data.role);
             sessionStorage.setItem("userRole", response.data.role);
         })
         .catch((error) =>{
@@ -40,9 +47,8 @@ export const Login: React.FC = () => {
             setErrorMessage(error.response.data);
             setTimeout(() => {
                 setErrorMessage("");
-            }, 2000);
+            }, 3000);
         });
-    
     }
 
 
@@ -57,6 +63,7 @@ export const Login: React.FC = () => {
                 </div>
                 <div className="button-container">
                     <button className="btn btn-primary w-100 " onClick={loginSubmit}>Login</button>
+                  
                     <button className="btn btn-secondary w-100" onClick={() => navigate("/register")}>Register</button>
                 </div>
             </div>

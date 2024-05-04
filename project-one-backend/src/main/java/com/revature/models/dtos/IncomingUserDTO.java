@@ -16,6 +16,6 @@ public class IncomingUserDTO {
     private String username;
     private String password;
     private String role; //by defualt this will be "employee", the only other role is manager
-
+    private int userId;
 
 }

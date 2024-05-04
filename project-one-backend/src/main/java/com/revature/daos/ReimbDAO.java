@@ -9,4 +9,6 @@ public interface ReimbDAO extends JpaRepository<Reimbursement, Integer> {
     public List<Reimbursement> findByStatus(String status);
 
     public List<Reimbursement> findByUserUserIdAndStatus(int userId, String status);
+
+    public List<Reimbursement> findAllByUserUserId(int userId);
 }

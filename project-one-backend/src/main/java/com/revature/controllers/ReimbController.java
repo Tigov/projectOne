@@ -38,9 +38,32 @@ public class ReimbController {
     }
 
 
-    @GetMapping
+    @GetMapping("/manager")
     public ResponseEntity<List<OutgoingReimbDTO>> getAllReimb() {
         return ResponseEntity.ok(reimbService.getAll());
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getAllReimb(HttpSession session) {
+        try{
+            return ResponseEntity.ok(reimbService.getAllForUser((int)session.getAttribute("userId")));
+        }
+        catch(Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{reimbId}")
+    public ResponseEntity<?> getReimbById(@PathVariable int reimbId, HttpSession session) {
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).body("You must login.");
+        }
+        try{
+            return ResponseEntity.ok(reimbService.getById(reimbId));
+        }
+        catch(Exception e){
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("/pending")
@@ -64,16 +87,22 @@ public class ReimbController {
         }
     }
 
-    @PatchMapping("/{reimbId}")
-    public ResponseEntity<?> updateReimbStatus(@RequestBody String newStatus, @PathVariable int reimbId, HttpSession session) {
+    @PutMapping
+    public ResponseEntity<?> updateEntireReimb(@RequestBody IncomingReimbDTO reimbDTO, HttpSession session){
         if (session.getAttribute("userId") == null) {
             return ResponseEntity.status(401).body("You must login.");
         }
-        return ResponseEntity.status(202).body(reimbService.updateStatus(reimbId, newStatus));
+        try{
+            return ResponseEntity.ok(reimbService.updateReimb(reimbDTO));
+        }
+        catch(Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+
     }
 
     @DeleteMapping("/{reimbId}")
-    public ResponseEntity<?> updateReimbStatus(@PathVariable int reimbId, HttpSession session) {
+    public ResponseEntity<?> deleteReimb(@PathVariable int reimbId, HttpSession session) {
         if (session.getAttribute("userId") == null) {
             return ResponseEntity.status(401).body("You must login.");
         }

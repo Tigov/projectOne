@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react"
-import { Reimb } from "../Reimb/Reimb"
 import { ReimbInterface } from "../../interfaces/ReimbInterface"
 import axios from "axios"
 import "./Collection.css"
+import { Button, Table } from "react-bootstrap"
+import "../Login/Login.css"
+import { Link } from "react-router-dom"
+
 
 export const Collection: React.FC = () => {
 
+    const [errorMessage, setErrorMessage] = useState("");
     const[reimbArr, setReimbArr] = useState<ReimbInterface[]>([])
 
     useEffect(() => {
@@ -13,25 +17,77 @@ export const Collection: React.FC = () => {
     },[])
     const getAllReimb = async () => {
         const response = await axios.get("http://localhost:8080/reimb", {withCredentials:true});
+        const sortedData = response.data.sort((a: ReimbInterface, b: ReimbInterface) => {
+        if (a.reimbId && b.reimbId) {
+                return a.reimbId - b.reimbId;
+            } else {
+                return 0;
+            }
+        });
         setReimbArr(response.data);
-        console.log(response);
     }
+
+
+    const handleDelete = async (id:number) => {
+        try{
+            const response = await axios.delete("http://localhost:8080/reimb/" + id, {withCredentials:true})
+            getAllReimb();
+        }
+        catch(error){
+            if(error instanceof Error){
+                console.log(error);
+                setErrorMessage(error.message);
+            }
+            else{
+                console.log(error);
+            }
+        }
+    }
+
+
+
     return(
-        <div className="container text-center ">
-            <div className="bg-light">
-                <div className="bg-dark text-light w-100 d-flex justify-content-between p-1">
-                    <th>Description</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                </div>
-                <div className="d-flex flex-column">
-                    {reimbArr.map((reimb, index) => 
-                        <div><Reimb {...reimb }/><hr className="m-0"></hr></div>
-                    )}
-                </div>
-            </div>
+        <div style={{margin:"5rem", marginLeft:"10rem",  marginRight:"10rem"}}>
+
+            {errorMessage && <div className="alert alert-warning errorMessage">{errorMessage}</div>}
+        
+                <Table striped bordered hover size="sm" >
+                    <thead >
+                        <tr>
+                            <th style={{width: '25%'}}>Description</th>
+                            <th style={{width: '25%'}}>Amount</th>
+                            <th style={{width: '25%'}}>Status</th>
+                            <th style={{width: '15%'}}>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {reimbArr && reimbArr.length > 0 ? 
+                        reimbArr.map((reimb, index) => 
+                            <tr>
+                                <td style={{wordWrap: 'break-word'}}>
+                                    {reimb.description}
+                                </td>
+                                <td style={{wordWrap: 'break-word'}}>
+                                    {reimb.amount}
+                                </td>
+                                <td style={{wordWrap: 'break-word'}}>
+                                    {reimb.status}
+                                </td>
+                                <td style={{wordWrap: 'break-word'}}>
+                                    <Link to={`/edit-reimb/${reimb.reimbId}`}>
+                                        <Button> Edit </Button>
+                                    </Link>
+                                    &nbsp;
+                                    <Button onClick={() => handleDelete(reimb.reimbId as number)}> Delete </Button>
+                                </td>
+                            </tr>
+                        ): "No data avaliable."}
+                    </tbody>
+                </Table>
+              
+            <br />
         </div>
+        
     )
 }
 
-//https://mui.com/material-ui/react-table/

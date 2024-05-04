@@ -29,19 +29,40 @@ public class UserService {
 
     //create a user from a given user from the frontend
     public User createUser(IncomingUserDTO userDTO){
-        //Check the username and password are not empty/null
-        if(userDTO.getUsername().isBlank() || userDTO.getUsername() == null){
+        Optional<User> found = userDAO.findById(userDTO.getUserId());
+        if(found.isEmpty()){ //if user does not exist, create one
+            //Check the username and password are not empty/null
+            if(userDTO.getUsername().isBlank()){
+                throw new IllegalArgumentException("Username cannot be empty.");
+            }
+            if(userDTO.getPassword().isBlank()){
+                throw new IllegalArgumentException("Password cannot be empty.");
+            }
+            if(userDAO.findByUsername(userDTO.getUsername()) != null){ //username is unique
+                throw new IllegalArgumentException("That username already exists.");
+            }
+
+            User newUser= new User(userDTO.getFirstName(), userDTO.getLastName(), userDTO.getUsername(), userDTO.getPassword(), userDTO.getRole());
+            //save the user to the database and return that user at the same time
+            return userDAO.save(newUser);
+        }
+        User foundUser = found.get();
+        //if user already exists (update it)
+        if(foundUser.getUsername().isBlank()){
             throw new IllegalArgumentException("Username cannot be empty.");
         }
-        if(userDTO.getPassword().isBlank() || userDTO.getPassword() == null){
-            throw new IllegalArgumentException("Password cannot be empty.");
+        if(!userDTO.getUsername().equals(foundUser.getUsername())){
+            foundUser.setUsername(userDTO.getUsername());
         }
-        if(userDAO.findByUsername(userDTO.getUsername()) != null){ //username is unique
-            throw new IllegalArgumentException("That username already exists.");
+        if(!userDTO.getFirstName().equals(foundUser.getFirstName())){
+            foundUser.setFirstName(userDTO.getFirstName());
         }
-
-        User newUser= new User(userDTO.getFirstName(), userDTO.getLastName(), userDTO.getUsername(), userDTO.getPassword(), userDTO.getRole());
-        //save the user to the database and return that user at the same time
+        if(!userDTO.getLastName().equals(foundUser.getLastName())){
+            foundUser.setLastName(userDTO.getLastName());
+        }
+        userDTO.setPassword(foundUser.getPassword());
+        //if other inputs are not inputted, keep everything the same.
+        User newUser= new User(foundUser.getUserId(), foundUser.getFirstName(), foundUser.getLastName(), foundUser.getUsername(), foundUser.getPassword(), foundUser.getRole());
         return userDAO.save(newUser);
     }
 
@@ -109,6 +130,15 @@ public class UserService {
         }
         userDAO.deleteById(userId);
         return u.get().getUsername(); //return the username of the deleted user for response messaging
+    }
+
+    public OutgoingUserDTO getUser(int userId){
+        Optional<User> u = userDAO.findById(userId);
+        if(u.isEmpty()){
+            throw new IllegalArgumentException("That user does not exist.");
+        }
+        User user = u.get();
+        return new OutgoingUserDTO(user.getUserId(),user.getFirstName(),user.getLastName(),user.getUsername(),user.getRole());
     }
 
 }

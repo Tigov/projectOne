@@ -12,7 +12,7 @@ import lombok.*;
 public class IncomingReimbDTO {
 
     private int userId;
-
+    private int reimbId;
     private String description;
 
     private double amount;

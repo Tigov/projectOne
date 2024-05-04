@@ -44,8 +44,42 @@ public class ReimbService {
         return reimbDAO.save(r);
     }
 
+    public OutgoingReimbDTO updateReimb(IncomingReimbDTO reimbDTO){
+        Reimbursement found = reimbDAO.findById(reimbDTO.getReimbId()).get();
+        //check the data
+        if (reimbDTO.getAmount() == 0 ) { //set default values of amount to 1.00, 0 is null for integer
+            throw new IllegalArgumentException("You must provide a valid amount");
+        }
+        if (reimbDTO.getStatus().isBlank()) {
+            throw new IllegalArgumentException("You must provide a valid status");
+        }
+
+        found.setAmount(reimbDTO.getAmount());
+        found.setDescription(reimbDTO.getDescription());
+        found.setStatus(reimbDTO.getStatus());
+
+        Reimbursement saved = reimbDAO.save(found);
+
+        return new OutgoingReimbDTO(saved.getReimbId(), saved.getUserId(), saved.getAmount(), saved.getDescription(),saved.getStatus());
+    }
+
     public List<OutgoingReimbDTO> getAll(){
         List<Reimbursement> allReimb = reimbDAO.findAll();
+        List<OutgoingReimbDTO> allReturned = new ArrayList<>();
+
+        for (Reimbursement r : allReimb) {
+            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus());
+            allReturned.add(outgoing);
+        }
+        return allReturned;
+    }
+
+
+    public List<OutgoingReimbDTO> getAllForUser(int userId){
+        if(userDAO.findById(userId).isEmpty()){
+            throw new IllegalArgumentException("That user does not exist.");
+        }
+        List<Reimbursement> allReimb = reimbDAO.findAllByUserUserId((userId));
         List<OutgoingReimbDTO> allReturned = new ArrayList<>();
 
         for (Reimbursement r : allReimb) {
@@ -86,5 +120,13 @@ public class ReimbService {
         r.get().getUser().getAllReimbursements().remove(r.get());
         reimbDAO.deleteById(r.get().getReimbId()); //delete it
         return "Reimbursement with amount " + r.get().getAmount() + " from user " + r.get().getUser().getUsername() + " has been deleted.";
+    }
+
+    public OutgoingReimbDTO getById(int reimbId){
+        Optional<Reimbursement> r = reimbDAO.findById(reimbId);
+        if (r.isEmpty()){
+            throw new IllegalArgumentException("That reimbursement doesn't exist.");
+        }
+        return new OutgoingReimbDTO(r.get().getReimbId(),r.get().getUserId(),r.get().getAmount(), r.get().getDescription(), r.get().getStatus());
     }
 }

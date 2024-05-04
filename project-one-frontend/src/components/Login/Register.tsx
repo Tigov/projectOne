@@ -39,7 +39,7 @@ export const Register: React.FC = () => {
             confirmPassword = input.target.value;
         }
     }
-
+ 
     const registerSubmit = async() => {
         if (confirmPassword != user.password) {
             setErrorMessage("Passwords must match.");
