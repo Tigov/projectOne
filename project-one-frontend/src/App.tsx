@@ -7,6 +7,9 @@ import { Dashboard } from './components/Dashboard/Dashboard';
 import { CreateReimb } from './components/EditData/CreateReimb';
 import { EditReimb } from "./components/EditData/EditReimb";
 import { EditUser } from "./components/EditData/EditUser";
+import { AllReimbs } from "./components/Dashboard/AllReimbs";
+import { AllUserPending } from "./components/Dashboard/AllUserPending";
+
 
 function App() {
 
@@ -21,6 +24,8 @@ function App() {
             <Route path="/edit-reimb/:id" element={<EditReimb />} />
             <Route path="/edit-user/:userId" element={<EditUser />} />
             <Route path="/create" element={<CreateReimb/>}/>
+            <Route path="/allUserPending/:userId" element={<AllUserPending/>}/>
+            <Route path="/allReimbs" element={<AllReimbs/>}/>
           </Routes>
         </BrowserRouter>
     </div>

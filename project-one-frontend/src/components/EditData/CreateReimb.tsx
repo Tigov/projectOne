@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "react-bootstrap";
 import { ReimbInterface } from "../../interfaces/ReimbInterface";
 import "../Login/Login.css"
@@ -15,11 +15,16 @@ export const CreateReimb: React.FC = () => {
     const[newReimb, setReimb] = useState<ReimbInterface>({
         amount:0,
         description:"",
-        status:"pending"
+        status:"PENDING"
     })
 
     const navigate = useNavigate();
-    
+    useEffect(() => {
+         if(sessionStorage.getItem("userRole") !== "employee" && sessionStorage.getItem("userRole") !== "manager" ){
+            navigate("/login");
+            return;
+        }
+    })
     const storeValues = (input:any) => {
         if(input.target.name === "amount"){
             setAmountNumberInput(input.target.value);
@@ -31,7 +36,6 @@ export const CreateReimb: React.FC = () => {
         }
         
     }
-
     const createSubmit = async() => {
         const regex = /^[0-9]*\.?[0-9]*$/;
         if(!regex.test(amountNumberInput)){
@@ -54,7 +58,7 @@ export const CreateReimb: React.FC = () => {
             setErrorMessage(error.response.data);
             setTimeout(() => {
                 setErrorMessage("");
-            }, 2000);
+            }, 3000);
         });
     }
     

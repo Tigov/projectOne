@@ -102,6 +102,19 @@ public class UserController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+    //Get another users pending reimbs
+    @GetMapping("/reimb/pending/{userId}")
+    public ResponseEntity<?> getAllOtherUserPending(@PathVariable int userId ,HttpSession session) {
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).body("You must login.");
+        }
+        try{
+            return ResponseEntity.ok(userService.getUsersPendingReimb(userId));
+        }
+        catch(Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     //method to create a user, they do not need to login for this
     @PostMapping

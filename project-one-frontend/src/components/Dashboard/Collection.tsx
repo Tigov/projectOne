@@ -1,32 +1,37 @@
 import { useEffect, useState } from "react"
 import { ReimbInterface } from "../../interfaces/ReimbInterface"
 import axios from "axios"
-import "./Collection.css"
 import { Button, Table } from "react-bootstrap"
 import "../Login/Login.css"
-import { Link } from "react-router-dom"
-
+import { Link, useNavigate } from "react-router-dom"
 
 export const Collection: React.FC = () => {
 
     const [errorMessage, setErrorMessage] = useState("");
     const[reimbArr, setReimbArr] = useState<ReimbInterface[]>([])
-
+    const navigate = useNavigate();
     useEffect(() => {
+        if(sessionStorage.getItem("userRole") !== "employee" && sessionStorage.getItem("userRole") !== "manager" ){
+            navigate("/login");
+            return;
+        }
         getAllReimb();
     },[])
     const getAllReimb = async () => {
-        const response = await axios.get("http://localhost:8080/reimb", {withCredentials:true});
-        const sortedData = response.data.sort((a: ReimbInterface, b: ReimbInterface) => {
-        if (a.reimbId && b.reimbId) {
-                return a.reimbId - b.reimbId;
-            } else {
-                return 0;
-            }
+    const response = await axios.get("http://localhost:8080/reimb", {withCredentials:true});
+    const sortedData = response.data.sort((a: ReimbInterface, b: ReimbInterface) => {
+        if (a.status === "DENIED" || a.status === "APPROVED") {
+            return 1;
+        } else if (b.status === "DENIED" || b.status === "APPROVED") {
+            return -1;
+        } else if (a.reimbId && b.reimbId) {
+            return a.reimbId - b.reimbId;
+        } else {
+            return 0;
+        }
         });
-        setReimbArr(response.data);
+        setReimbArr(sortedData);
     }
-
 
     const handleDelete = async (id:number) => {
         try{
@@ -44,10 +49,8 @@ export const Collection: React.FC = () => {
         }
     }
 
-
-
     return(
-        <div style={{margin:"5rem", marginLeft:"10rem",  marginRight:"10rem"}}>
+        <div style={{margin:"2rem"}}>
 
             {errorMessage && <div className="alert alert-warning errorMessage">{errorMessage}</div>}
         
@@ -74,20 +77,20 @@ export const Collection: React.FC = () => {
                                     {reimb.status}
                                 </td>
                                 <td style={{wordWrap: 'break-word'}}>
-                                    <Link to={`/edit-reimb/${reimb.reimbId}`}>
-                                        <Button> Edit </Button>
-                                    </Link>
+                                    {reimb.status !== "APPROVED" && reimb.status !== "DENIED" && (
+                                        <Link to={`/edit-reimb/${reimb.reimbId}`}>
+                                            <Button className="btn btn-secondary"> Edit </Button>
+                                        </Link>
+                                    )}
                                     &nbsp;
-                                    <Button onClick={() => handleDelete(reimb.reimbId as number)}> Delete </Button>
+                                    <Button  className="btn btn-danger" onClick={() => handleDelete(reimb.reimbId as number)}> Delete </Button>
                                 </td>
                             </tr>
                         ): "No data avaliable."}
                     </tbody>
                 </Table>
-              
             <br />
         </div>
-        
     )
 }
 

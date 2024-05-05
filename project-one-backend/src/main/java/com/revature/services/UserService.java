@@ -48,12 +48,17 @@ public class UserService {
         }
         User foundUser = found.get();
         //if user already exists (update it)
-        if(foundUser.getUsername().isBlank()){
+        if(userDTO.getUsername().isBlank()){
             throw new IllegalArgumentException("Username cannot be empty.");
         }
+
         if(!userDTO.getUsername().equals(foundUser.getUsername())){
+            if(userDAO.findByUsername(userDTO.getUsername()) != null){ //username isn't unique
+                throw new IllegalArgumentException("That username already exists.");
+            }
             foundUser.setUsername(userDTO.getUsername());
         }
+
         if(!userDTO.getFirstName().equals(foundUser.getFirstName())){
             foundUser.setFirstName(userDTO.getFirstName());
         }
@@ -93,7 +98,7 @@ public class UserService {
         List<OutgoingReimbDTO> allReturned = new ArrayList<>();
 
         for (Reimbursement r : allReimb) {
-            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus());
+            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus(),r.getUser().getUsername());
             allReturned.add(outgoing);
         }
         return allReturned;
@@ -101,11 +106,11 @@ public class UserService {
 
 
     public List<OutgoingReimbDTO> getUsersPendingReimb(int userId){
-        List<Reimbursement> allPending = reimbDAO.findByUserUserIdAndStatus(userId, "pending");
+        List<Reimbursement> allPending = reimbDAO.findByUserUserIdAndStatus(userId, "PENDING");
         List<OutgoingReimbDTO> allReturned = new ArrayList<>();
 
         for (Reimbursement r : allPending) {
-            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus());
+            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus(),r.getUser().getUsername());
             allReturned.add(outgoing);
         }
         return allReturned;

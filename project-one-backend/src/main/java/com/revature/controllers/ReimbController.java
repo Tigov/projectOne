@@ -37,12 +37,20 @@ public class ReimbController {
         this.userDAO = userDAO;
     }
 
-
+    //get all reimbs in general
     @GetMapping("/manager")
-    public ResponseEntity<List<OutgoingReimbDTO>> getAllReimb() {
+    public ResponseEntity<?> getAllReimbManager(HttpSession session) {
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).body("You must login.");
+        }
+        if (!userDAO.findById((int)session.getAttribute("userId")).get().getRole().equals("manager")) {
+            return ResponseEntity.status(401).body("You are not authorized to alter this data.");
+        }
+
         return ResponseEntity.ok(reimbService.getAll());
     }
 
+    //get all reimbs for this user
     @GetMapping
     public ResponseEntity<?> getAllReimb(HttpSession session) {
         try{
@@ -67,7 +75,10 @@ public class ReimbController {
     }
 
     @GetMapping("/pending")
-    public ResponseEntity<List<OutgoingReimbDTO>> getAllPending(){
+    public ResponseEntity<?> getAllPending(HttpSession session){
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).body("You must login.");
+        }
         return ResponseEntity.ok(reimbService.getAllPending());
     }
 
@@ -98,7 +109,22 @@ public class ReimbController {
         catch(Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
 
+    @PatchMapping("/{reimbId}")
+    public ResponseEntity<?> updateStatus(@PathVariable int reimbId,@RequestBody String newStatus, HttpSession session){
+        if (session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).body("You must login.");
+        }
+        if (!userDAO.findById((int)session.getAttribute("userId")).get().getRole().equals("manager")) {
+            return ResponseEntity.status(401).body("You are not authorized to alter this data.");
+        }
+        try{
+            return ResponseEntity.ok(reimbService.updateStatus(reimbId,newStatus));
+        }
+        catch(Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{reimbId}")

@@ -1,20 +1,20 @@
 import { useNavigate } from "react-router-dom"
-import "./Login.css"
 import { useEffect, useState } from "react";
 import { UserInterface } from "../../interfaces/UserInterface";
 import axios from "axios";
+import "./Login.css"
+
 
 
 export const Login: React.FC = () => {
 
-
     const navigate = useNavigate();
     const [errorMessage, setErrorMessage] = useState("");
-
     const[user, setUser] = useState<UserInterface>({
         username:"",
         password:""
     })
+
 
     const storeValues = (input:any) => {
         let passwordStore:string = "";
@@ -28,13 +28,13 @@ export const Login: React.FC = () => {
     }
     
 
-    // const clearSession = () => {
-    //     sessionStorage.clear();
-    //     localStorage.clear();
-    // }
-    // useEffect(() => { //whenever we go to login page, clear the session
-    //     clearSession();
-    // },[])
+    const clearSession = () => {
+        sessionStorage.clear();
+        localStorage.clear();
+    }
+    useEffect(() => { //whenever we go to login page, clear the session
+        clearSession();
+    },[])
     const loginSubmit = async() => {
        
         const response = await axios.post("http://localhost:8080/users/login", user, {withCredentials:true})
@@ -51,7 +51,6 @@ export const Login: React.FC = () => {
         });
     }
 
-
     return (
         <div className="login bg-light text-dark d-flex justify-content-center align-items-center vh-100">
             {errorMessage && <div className="alert alert-warning errorMessage">{errorMessage}</div>}
@@ -63,12 +62,9 @@ export const Login: React.FC = () => {
                 </div>
                 <div className="button-container">
                     <button className="btn btn-primary w-100 " onClick={loginSubmit}>Login</button>
-                  
                     <button className="btn btn-secondary w-100" onClick={() => navigate("/register")}>Register</button>
                 </div>
             </div>
         </div>
     )
-
-
 }

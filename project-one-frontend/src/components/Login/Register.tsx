@@ -45,7 +45,7 @@ export const Register: React.FC = () => {
             setErrorMessage("Passwords must match.");
             setTimeout(() => {
                 setErrorMessage("");
-            }, 2000);
+            }, 3000);
             return;
         }
         const response = await axios.post("http://localhost:8080/users", user, {withCredentials:true})
@@ -54,7 +54,7 @@ export const Register: React.FC = () => {
             setErrorMessage(error.response.data);
             setTimeout(() => {
                 setErrorMessage("");
-            }, 2000);
+            }, 3000);
         });
     
     }

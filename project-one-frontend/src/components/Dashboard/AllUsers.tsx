@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react"
 import axios from "axios"
-import "./Collection.css"
 import { Button, Table } from "react-bootstrap"
 import "../Login/Login.css"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { UserInterface } from "../../interfaces/UserInterface"
 
 
@@ -11,8 +10,12 @@ export const AllUsers: React.FC = () => {
 
     const [errorMessage, setErrorMessage] = useState("");
     const[usersArr, setUsers] = useState<UserInterface[]>([])
-
+    const navigate = useNavigate();
     useEffect(() => {
+        if(sessionStorage.getItem("userRole") !== "manager"){
+            navigate("/login");
+            return;
+        }
         getAllUsers();
     },[])
     const getAllUsers = async () => {
@@ -33,10 +36,12 @@ export const AllUsers: React.FC = () => {
             const response = await axios.delete("http://localhost:8080/users/" + id, {withCredentials:true})
             getAllUsers();
         }
-        catch(error){
-            if(error instanceof Error){
-                console.log(error);
-                setErrorMessage(error.message);
+        catch(error:any){
+            if(error){
+                setErrorMessage(error.response.data);
+                setTimeout(() => {
+                    setErrorMessage("");
+                }, 3000);
             }
             else{
                 console.log(error);
@@ -56,11 +61,14 @@ export const AllUsers: React.FC = () => {
                 // Update the state
                 setUsers(newUsersArr);
             }
-        } catch (error) {
-            if (error instanceof Error) {
-                console.log(error);
-                setErrorMessage(error.message);
-            } else {
+        } catch(error:any){
+            if(error){
+                setErrorMessage(error.response.data);
+                setTimeout(() => {
+                    setErrorMessage("");
+                }, 3000);
+            }
+            else{
                 console.log(error);
             }
         }
@@ -68,8 +76,7 @@ export const AllUsers: React.FC = () => {
 
 
     return(
-        <div style={{margin:"2rem", marginLeft:"10rem",  marginRight:"10rem"}}>
-
+        <div style={{margin:"2rem"}}>
             {errorMessage && <div className="alert alert-warning errorMessage">{errorMessage}</div>}
             <Table striped bordered hover size="sm" >
                 <thead >
@@ -78,7 +85,7 @@ export const AllUsers: React.FC = () => {
                         <th style={{width: '20%'}}>Last Name</th>
                         <th style={{width: '20%'}}>Username</th>
                         <th style={{width: '20%'}}>Role</th>
-                        <th style={{width: '10%'}}>Action</th>
+                        <th style={{width: '15%'}}>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -102,10 +109,14 @@ export const AllUsers: React.FC = () => {
                             </td>
                             <td style={{wordWrap: 'break-word'}}>
                                 <Link to={`/edit-user/${user.userId}`}>
-                                    <Button> Edit </Button>
+                                    <Button className="btn btn-secondary"> Edit </Button>
                                 </Link>
                                 &nbsp;
-                                <Button onClick={() => handleDelete(user.userId as number)}> Delete </Button>
+                                <Link to={`/allUserPending/${user.userId}`}>
+                                    <Button> Pending </Button>
+                                </Link>
+                                &nbsp;
+                                <Button  className="btn btn-danger" onClick={() => handleDelete(user.userId as number)}> Delete </Button>
                             </td>
                         </tr>
                     ): "No data avaliable."}

@@ -60,7 +60,7 @@ public class ReimbService {
 
         Reimbursement saved = reimbDAO.save(found);
 
-        return new OutgoingReimbDTO(saved.getReimbId(), saved.getUserId(), saved.getAmount(), saved.getDescription(),saved.getStatus());
+        return new OutgoingReimbDTO(saved.getReimbId(), saved.getUserId(), saved.getAmount(), saved.getDescription(),saved.getStatus(),saved.getUser().getUsername());
     }
 
     public List<OutgoingReimbDTO> getAll(){
@@ -68,7 +68,7 @@ public class ReimbService {
         List<OutgoingReimbDTO> allReturned = new ArrayList<>();
 
         for (Reimbursement r : allReimb) {
-            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus());
+            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus(),r.getUser().getUsername());
             allReturned.add(outgoing);
         }
         return allReturned;
@@ -83,18 +83,18 @@ public class ReimbService {
         List<OutgoingReimbDTO> allReturned = new ArrayList<>();
 
         for (Reimbursement r : allReimb) {
-            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus());
+            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus(),r.getUser().getUsername());
             allReturned.add(outgoing);
         }
         return allReturned;
     }
 
     public List<OutgoingReimbDTO> getAllPending(){
-        List<Reimbursement> allReimb = reimbDAO.findByStatus("pending");
+        List<Reimbursement> allReimb = reimbDAO.findByStatus("PENDING");
         List<OutgoingReimbDTO> allReturned = new ArrayList<>();
 
         for (Reimbursement r : allReimb) {
-            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus());
+            OutgoingReimbDTO outgoing = new OutgoingReimbDTO(r.getReimbId(),r.getUserId(),r.getAmount(),r.getDescription(),r.getStatus(),r.getUser().getUsername());
             allReturned.add(outgoing);
         }
         return allReturned;
@@ -105,11 +105,13 @@ public class ReimbService {
         if (r.isEmpty()) {
             throw new IllegalArgumentException("That reimbursement doesn't exist.");
         }
-
+        if(!(newStatus.equals("APPROVED") || newStatus.equals("DENIED"))){
+            throw new IllegalArgumentException("Status must be only APPROVED or DENIED.");
+        }
         Reimbursement found = r.get();
         found.setStatus(newStatus);
         Reimbursement savedR = reimbDAO.save(found);
-        return new OutgoingReimbDTO(savedR.getReimbId(), savedR.getUserId(), savedR.getAmount(), savedR.getDescription(), savedR.getStatus());
+        return new OutgoingReimbDTO(savedR.getReimbId(), savedR.getUserId(), savedR.getAmount(), savedR.getDescription(), savedR.getStatus(),savedR.getUser().getUsername());
     }
 
     public String deleteReimb(int reimbId){
@@ -127,6 +129,6 @@ public class ReimbService {
         if (r.isEmpty()){
             throw new IllegalArgumentException("That reimbursement doesn't exist.");
         }
-        return new OutgoingReimbDTO(r.get().getReimbId(),r.get().getUserId(),r.get().getAmount(), r.get().getDescription(), r.get().getStatus());
+        return new OutgoingReimbDTO(r.get().getReimbId(),r.get().getUserId(),r.get().getAmount(), r.get().getDescription(), r.get().getStatus(),r.get().getUser().getUsername());
     }
 }

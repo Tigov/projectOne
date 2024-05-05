@@ -19,7 +19,7 @@ export const EditUser: React.FC = () => {
 
 
     const [newUser, setNewUser] = useState<UserInterface>({
-        userId:0,
+        userId:Number(userId),
         username:"",
         firstName:"",
         lastName:"",
@@ -36,8 +36,15 @@ export const EditUser: React.FC = () => {
             setUsersReimbs(response.data);
             console.log(usersReimbs);
         }
-        catch(error){
-            console.log(error);
+        catch (error:any) {
+            if (error) {
+                setErrorMessage(error.response.data);
+                setTimeout(() => {
+                    setErrorMessage("");
+                }, 3000);
+            } else {
+                console.log(error);
+            }
         }
     }
 
@@ -53,7 +60,7 @@ export const EditUser: React.FC = () => {
             setNewUser((user) => ({...user, lastName:input.target.value}))
         }
         else if (input.target.name === "username") {
-            setLNInput(input.target.value);
+            setUsername(input.target.value);
             setNewUser((user) => ({...user, username:input.target.value}))
         }
     }
@@ -67,7 +74,12 @@ export const EditUser: React.FC = () => {
         setUsername(foundUser.username);
     }
 
+
     useEffect(() => {
+        if(sessionStorage.getItem("userRole") !== "manager"){
+            navigate("/login");
+            return;
+        }
         getAllUserReimbs();
         getUser();
     },[])
@@ -78,13 +90,15 @@ export const EditUser: React.FC = () => {
             const response = await axios.post("http://localhost:8080/users", newUser, {withCredentials:true});
             navigate("/dashboard");
         }
-        catch(error){
-            setErrorMessage(String(error));
-            setTimeout(() => {
-                setErrorMessage("");
-            }, 2000);
-            console.log(error)
-            return;
+        catch (error:any) {
+            if (error) {
+                setErrorMessage(error.response.data);
+                setTimeout(() => {
+                    setErrorMessage("");
+                }, 3000);
+            } else {
+                console.log(error);
+            }
         }
     }
 

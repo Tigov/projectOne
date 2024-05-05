@@ -20,6 +20,10 @@ export const EditReimb: React.FC = () => {
     })
 // Fetch the reimbursement when the component is mounted
     useEffect(() => {
+        if(sessionStorage.getItem("userRole") !== "employee" && sessionStorage.getItem("userRole") !== "manager" ){
+            navigate("/login");
+            return;
+        }
         const fetchReimb = async () => {
             const response = await axios.get(`http://localhost:8080/reimb/${id}`, {withCredentials:true});
             const reimb = response.data;
@@ -65,7 +69,7 @@ export const EditReimb: React.FC = () => {
             setErrorMessage(error.response.data);
             setTimeout(() => {
                 setErrorMessage("");
-            }, 2000);
+            }, 3000);
         });
     }
     
